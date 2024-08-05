@@ -50,6 +50,20 @@
             border-radius: 5px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+        .Side-Bar h1 {
+            font-weight: bold;
+            font-size: 16pt;
+            margin: 0;
+            text-align: center; /* Başlık ortalanacak */
+        }
+        .Side-Bar p {
+            font-size: 12pt;
+            margin: 0;
+            text-align: left; /* Açıklama sola yaslanacak */
         }
         .Map {
             grid-area: Map;
@@ -83,8 +97,10 @@
         </div>
         <div class="Side-Bar">
             <h1>Harita Başlığı</h1>
-            <p>Bu haritanın açıklaması burada yer alır.</p>
-            <p>Burada ek açıklamalar yapabilirsin.</p>
+            <p>
+                Bu haritanın açıklaması burada yer alır. Açıklamanın bu kısmı yer doldurucu metin olarak kullanılıyor ve sola yaslanarak hizalanmıştır.
+                Açıklama kısmı sayfa düzenini ve içerik akışını koruyacak şekilde tasarlanmıştır.
+            </p>
         </div>
         <div id="map" class="Map"></div>
     </div>
@@ -141,7 +157,13 @@
             "Carto Light No Labels": baseLayer
         };
 
-        L.control.layers(baseMaps, wmsLayers, {position: 'topright'}).addTo(map);
+        var overlayMaps = {};
+
+        for (var key in wmsLayers) {
+            overlayMaps[key] = wmsLayers[key];
+        }
+
+        L.control.layers(baseMaps, overlayMaps, {position: 'topright', collapsed: false}).addTo(map);
 
         // Lejant
         var legend = L.control({position: 'bottomright'});
