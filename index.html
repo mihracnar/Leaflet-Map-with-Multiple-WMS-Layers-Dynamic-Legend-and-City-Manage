@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leaflet Map with Multiple WMS Layers and Dynamic Legend</title>
+    <title>Leaflet Map with Multiple WMS Layers, Dynamic Legend, and City Manager</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-minimap/dist/Control.MiniMap.min.css" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap">
@@ -58,12 +58,12 @@
             font-weight: bold;
             font-size: 16pt;
             margin: 0;
-            text-align: center; /* Başlık ortalanacak */
+            text-align: center;
         }
         .Side-Bar p {
             font-size: 12pt;
             margin: 0;
-            text-align: left; /* Açıklama sola yaslanacak */
+            text-align: left;
         }
         .Map {
             grid-area: Map;
@@ -88,6 +88,23 @@
             display: block;
             margin-top: 5px;
         }
+        #city-manager {
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin: 10px;
+        }
+        #city-manager label {
+            font-weight: 600;
+            font-size: 14pt;
+        }
+        #city-manager select {
+            width: 100%;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
@@ -101,6 +118,12 @@
                 Bu haritanın açıklaması burada yer alır. Açıklamanın bu kısmı yer doldurucu metin olarak kullanılıyor ve sola yaslanarak hizalanmıştır.
                 Açıklama kısmı sayfa düzenini ve içerik akışını koruyacak şekilde tasarlanmıştır.
             </p>
+            <div id="city-manager">
+                <label for="cities">Şehirler:</label>
+                <select id="cities">
+                    <!-- "Şehir seçiniz" seçeneğini burada tanımlıyoruz -->
+                </select>
+            </div>
         </div>
         <div id="map" class="Map"></div>
     </div>
@@ -120,10 +143,10 @@
         var map = L.map('map', {
             center: centerCoordinates,
             zoom: zoomLevel,
-            minZoom: minZoomLevel, // Minimum zoom seviyesi
+            minZoom: minZoomLevel,
             layers: [],
-            maxBounds: bounds, // Haritanın sınırları
-            maxBoundsViscosity: 1.0 // Harita kenarına gelince esneklik olmaması için
+            maxBounds: bounds,
+            maxBoundsViscosity: 1.0
         });
 
         // Taban Haritası (CRS: EPSG:3857)
@@ -215,6 +238,44 @@
             minimized: false,
             position: 'bottomleft'
         }).addTo(map);
+
+        // Şehirler (Bookmark) Yöneticisi
+        var cities = {
+            "Şehir seçiniz": {center: centerCoordinates, zoom: zoomLevel},
+            "İstanbul": {center: [41.0082, 28.9784], zoom: 10},
+            "Ankara": {center: [39.9334, 32.8597], zoom: 10},
+            "İzmir": {center: [38.4192, 27.1287], zoom: 11},
+            "Antalya": {center: [36.8841, 30.7056], zoom: 11},
+            "Adana": {center: [37.0017, 35.3289], zoom: 11}
+        };
+
+        var citySelect = document.getElementById('cities');
+
+        // "Şehir seçiniz" seçeneğini yalnızca bir kez ekleyin
+        var defaultOption = document.createElement('option');
+        defaultOption.value = "";
+        defaultOption.textContent = "Şehir seçiniz";
+        defaultOption.selected = true;
+        citySelect.appendChild(defaultOption);
+
+        Object.keys(cities).forEach(function(name) {
+            if (name !== "Şehir seçiniz") {
+                var option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                citySelect.appendChild(option);
+            }
+        });
+
+        citySelect.addEventListener('change', function() {
+            var selectedCity = citySelect.value;
+            var city = cities[selectedCity];
+            if (city) {
+                map.setView(city.center, city.zoom);
+            }
+        });
+
+        // Varsayılan olarak "Şehir seçiniz" seçili ve harita bu seçeneğe göre ayarlanmış
     </script>
 </body>
 </html>
