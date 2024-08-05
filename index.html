@@ -4,10 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Leaflet Map with Multiple WMS Layers, Dynamic Legend, and City Manager</title>
+    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <!-- Leaflet MiniMap CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet-minimap/dist/Control.MiniMap.min.css" />
+    <!-- Open Sans Font -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap">
     <style>
+        /* Genel stil ayarları */
         body {
             margin: 0;
             display: flex;
@@ -16,12 +20,12 @@
             overflow: hidden;
             font-family: 'Open Sans', sans-serif;
         }
+        /* Grid düzeni */
         .container {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
             grid-template-rows: 1fr 1fr 1fr 1fr 1fr;
-            gap: 10px 10px;
-            grid-auto-flow: row;
+            gap: 10px;
             grid-template-areas:
                 "Logo Map Map Map Map Map"
                 "Side-Bar Map Map Map Map Map"
@@ -30,6 +34,7 @@
                 "Side-Bar Map Map Map Map Map";
             height: 100%;
         }
+        /* Logo stili */
         .Logo {
             grid-area: Logo;
             background-color: white;
@@ -43,6 +48,7 @@
             max-width: 80%;
             max-height: 80%;
         }
+        /* Side-Bar stili */
         .Side-Bar {
             grid-area: Side-Bar;
             background-color: white;
@@ -65,21 +71,29 @@
             margin: 0;
             text-align: left;
         }
-        .Map {
+        /* Harita konteynırı stili */
+        .map-container {
             grid-area: Map;
             height: 100%;
+            position: relative;
         }
-        .legend {
-            background-color: white;
-            padding: 10px;
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-            border: 2px solid #ccc;
-            border-radius: 5px;
-            box-sizing: border-box;
-            font-family: 'Open Sans', sans-serif;
+        .map-container .leaflet-container {
+            height: 100%;
+            width: 100%;
         }
+        /* Lejant stili */
+.legend {
+    background-color: rgba(255, 255, 255, 0.6); /* %60 opak, %40 şeffaf */
+    padding: 10px;
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    border: 2px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+    font-family: 'Open Sans', sans-serif;
+}
+
         .legend h4, .legend h5 {
             margin: 0;
             font-weight: 600;
@@ -88,6 +102,7 @@
             display: block;
             margin-top: 5px;
         }
+        /* Şehirler (Bookmark) yöneticisi stili */
         #city-manager {
             background-color: white;
             padding: 10px;
@@ -109,25 +124,33 @@
 </head>
 <body>
     <div class="container">
+        <!-- Logo Alanı -->
         <div class="Logo">
             <img src="https://upload.wikimedia.org/wikipedia/tr/4/40/Tarihi_Kentler_Birli%C4%9Fi_logo.png" alt="Logo">
         </div>
+        <!-- Sol Panel (Side-Bar) -->
         <div class="Side-Bar">
             <h1>Harita Başlığı</h1>
             <p>
                 Bu haritanın açıklaması burada yer alır. Açıklamanın bu kısmı yer doldurucu metin olarak kullanılıyor ve sola yaslanarak hizalanmıştır.
                 Açıklama kısmı sayfa düzenini ve içerik akışını koruyacak şekilde tasarlanmıştır.
             </p>
+            <!-- Şehirler Yöneticisi -->
             <div id="city-manager">
                 <label for="cities">Şehirler:</label>
                 <select id="cities">
-                    <!-- "Şehir seçiniz" seçeneğini burada tanımlıyoruz -->
+                    <!-- "Şehir seçiniz" seçeneği varsayılan olarak gösterilir -->
                 </select>
             </div>
         </div>
-        <div id="map" class="Map"></div>
+        <!-- Harita Konteynırı -->
+        <div class="map-container">
+            <div id="map"></div>
+        </div>
     </div>
+    <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <!-- Leaflet MiniMap JS -->
     <script src="https://unpkg.com/leaflet-minimap/dist/Control.MiniMap.min.js"></script>
     <script>
         // Haritanın merkezi ve başlangıç zoom seviyesi
@@ -136,10 +159,11 @@
         var minZoomLevel = 5; // Minimum zoom seviyesi
 
         // Harita sınırları (Türkiye sınırları)
-        var southWest = L.latLng(35.0, 25.0);
-        var northEast = L.latLng(42.5, 45.0);
+        var southWest = L.latLng(33.0, 25.0);
+        var northEast = L.latLng(43, 46.0);
         var bounds = L.latLngBounds(southWest, northEast);
 
+        // Harita oluşturuluyor
         var map = L.map('map', {
             center: centerCoordinates,
             zoom: zoomLevel,
@@ -149,14 +173,14 @@
             maxBoundsViscosity: 1.0
         });
 
-        // Taban Haritası (CRS: EPSG:3857)
+        // Taban Haritası
         var baseLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/light_nolabels/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: '&copy; <a href="https://carto.com/">Carto</a>',
             noWrap: true
         }).addTo(map);
 
-        // WMS Katmanları (CRS: EPSG:3857)
+        // WMS Katmanları
         var wmsLayers = {
             "Vatandaş Sit Alanı": L.tileLayer.wms('https://tvksaysgis.csb.gov.tr/geoserver/tabiatvarlik/wms?', {
                 layers: 'tabiatvarlik:VatandasSitAlani',
@@ -188,7 +212,7 @@
 
         L.control.layers(baseMaps, overlayMaps, {position: 'topright', collapsed: false}).addTo(map);
 
-        // Lejant
+        // Lejant (Legend) kontrolü
         var legend = L.control({position: 'bottomright'});
 
         legend.onAdd = function(map) {
