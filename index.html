@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leaflet Map with Layers Control, Legend, and Mini Map</title>
+    <title>Leaflet Map with Multiple WMS Layers and Dynamic Legend</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-minimap/dist/Control.MiniMap.min.css" />
     <style>
@@ -14,17 +14,22 @@
             height: 100vh;
             overflow: hidden;
         }
-        #header {
-            background-color: #f0f0f0;
-            padding: 10px;
-            display: flex;
-            align-items: center;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        #logo-container {
-            width: 15%; /* Logo konteyneri genişliği */
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr 1fr 1fr 1fr;
+            gap: 10px 10px;
+            grid-auto-flow: row;
+            grid-template-areas:
+                "Logo Map Map Map Map Map"
+                "Side-Bar Map Map Map Map Map"
+                "Side-Bar Map Map Map Map Map"
+                "Side-Bar Map Map Map Map Map"
+                "Side-Bar Map Map Map Map Map";
             height: 100%;
+        }
+        .Logo {
+            grid-area: Logo;
             background-color: white;
             border-radius: 5px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -32,39 +37,20 @@
             justify-content: center;
             align-items: center;
         }
-        #header-container {
+        .Logo img {
+            max-width: 80%;
+            max-height: 80%;
+        }
+        .Side-Bar {
+            grid-area: Side-Bar;
             background-color: white;
             padding: 10px;
             border-radius: 5px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            flex: 1;
-            margin-left: 2%; /* Logo konteyneri yanındaki boşluk */
-        }
-        #container {
-            display: flex;
-            flex: 1;
-            overflow: hidden;
-            padding: 0 2%; /* Harita ve sol panel arasındaki boşluk */
             box-sizing: border-box;
         }
-        #sidebar {
-            background-color: #f0f0f0;
-            padding: 10px;
-            width: 15%; /* Sol panel genişliği */
-            box-sizing: border-box;
-            margin-right: 2%; /* Harita ile arasındaki boşluk */
-        }
-        #sidebar-container {
-            background-color: white;
-            padding: 10px;
-            border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            width: calc(100% - 20px);
-            height: 100%;
-            box-sizing: border-box;
-        }
-        #map {
-            flex: 1;
+        .Map {
+            grid-area: Map;
             height: 100%;
         }
         .legend {
@@ -80,20 +66,16 @@
     </style>
 </head>
 <body>
-    <div id="header">
-        <div id="logo-container"></div>
-        <div id="header-container">
+    <div class="container">
+        <div class="Logo">
+            <img src="https://upload.wikimedia.org/wikipedia/tr/4/40/Tarihi_Kentler_Birli%C4%9Fi_logo.png" alt="Logo">
+        </div>
+        <div class="Side-Bar">
             <h1>Harita Başlığı</h1>
             <p>Bu haritanın açıklaması burada yer alır.</p>
+            <p>Burada ek açıklamalar yapabilirsin.</p>
         </div>
-    </div>
-    <div id="container">
-        <div id="sidebar">
-            <div id="sidebar-container">
-                <p>Burada ek açıklamalar yapabilirsin.</p>
-            </div>
-        </div>
-        <div id="map"></div>
+        <div id="map" class="Map"></div>
     </div>
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-minimap/dist/Control.MiniMap.min.js"></script>
@@ -102,10 +84,17 @@
         var centerCoordinates = [39.14954915306135, 34.35039849792853];
         var zoomLevel = 6;
 
+        // Harita sınırları (Türkiye sınırları)
+        var southWest = L.latLng(35.0, 25.0);
+        var northEast = L.latLng(42.5, 45.0);
+        var bounds = L.latLngBounds(southWest, northEast);
+
         var map = L.map('map', {
             center: centerCoordinates,
             zoom: zoomLevel,
-            layers: []
+            layers: [],
+            maxBounds: bounds, // Haritanın sınırları
+            maxBoundsViscosity: 1.0 // Harita kenarına gelince esneklik olmaması için
         });
 
         // Taban Haritası (CRS: EPSG:3857)
@@ -115,25 +104,31 @@
             noWrap: true
         }).addTo(map);
 
-        // WMS Katmanı (CRS: EPSG:3857)
-        var wmsLayer = L.tileLayer.wms('https://tvksaysgis.csb.gov.tr/geoserver/tabiatvarlik/wms?', {
-            layers: 'tabiatvarlik:VatandasSitAlani',
-            format: 'image/png',
-            transparent: true,
-            tiled: true,
-            crs: L.CRS.EPSG3857
-        }).addTo(map);
+        // WMS Katmanları (CRS: EPSG:3857)
+        var wmsLayers = {
+            "Katman 1": L.tileLayer.wms('https://tvksaysgis.csb.gov.tr/geoserver/tabiatvarlik/wms?', {
+                layers: 'tabiatvarlik:VatandasSitAlani',
+                format: 'image/png',
+                transparent: true,
+                tiled: true,
+                crs: L.CRS.EPSG3857
+            }),
+            "Katman 2": L.tileLayer.wms('https://another-geoserver-url.com/geoserver/wms?', {
+                layers: 'anotherlayer:LayerName',
+                format: 'image/png',
+                transparent: true,
+                tiled: true,
+                crs: L.CRS.EPSG3857
+            }),
+            // Üç, dört ve beşinci WMS katmanları da benzer şekilde eklenebilir.
+        };
 
         // Katman Kontrolü
         var baseMaps = {
             "Carto Light No Labels": baseLayer
         };
-        
-        var overlayMaps = {
-            "WMS Layer": wmsLayer
-        };
 
-        L.control.layers(baseMaps, overlayMaps, {position: 'topright'}).addTo(map);
+        L.control.layers(baseMaps, wmsLayers, {position: 'topright'}).addTo(map);
 
         // Lejant
         var legend = L.control({position: 'bottomright'});
@@ -141,8 +136,9 @@
         legend.onAdd = function(map) {
             var div = L.DomUtil.create('div', 'legend');
             div.innerHTML += '<h4>Lejant</h4>';
-            div.innerHTML += '<p>Katman 1: Açıklama</p>';
-            div.innerHTML += '<p>Katman 2: Açıklama</p>';
+            for (var layer in wmsLayers) {
+                div.innerHTML += '<p>' + layer + ': Açıklama</p>';
+            }
             return div;
         };
 
