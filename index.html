@@ -10,21 +10,21 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet-minimap/dist/Control.MiniMap.min.css" />
     <!-- Open Sans Font -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap">
-    <style>
+        <style>
         /* Genel stil ayarları */
         body {
             margin: 0;
             display: flex;
             flex-direction: column;
             height: 100vh;
-            overflow: hidden;
+            overflow:auto;
             font-family: 'Open Sans', sans-serif;
         }
         /* Grid düzeni */
         .container {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
-            grid-template-rows: 1fr 1fr 1fr 1fr 1fr;
+            grid-template-columns: 20% 1fr 1fr 1fr 1fr 1fr;
+            grid-template-rows: 15% 1fr 1fr 1fr 1fr;
             gap: 10px;
             grid-template-areas:
                 "Logo Map Map Map Map Map"
@@ -82,18 +82,17 @@
             width: 100%;
         }
         /* Lejant stili */
-.legend {
-    background-color: rgba(255, 255, 255, 0.6); /* %60 opak, %40 şeffaf */
-    padding: 10px;
-    position: absolute;
-    bottom: 10px;
-    right: 10px;
-    border: 2px solid #ccc;
-    border-radius: 5px;
-    box-sizing: border-box;
-    font-family: 'Open Sans', sans-serif;
-}
-
+        .legend {
+            background-color: rgba(255, 255, 255, 0.6); /* %60 opak, %40 şeffaf */
+            padding: 10px;
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            border: 2px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-family: 'Open Sans', sans-serif;
+        }
         .legend h4, .legend h5 {
             margin: 0;
             font-weight: 600;
@@ -119,6 +118,30 @@
             padding: 5px;
             border: 1px solid #ccc;
             border-radius: 5px;
+        }
+
+        /* Medya sorguları */
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto 1fr;
+                grid-template-areas:
+                    "Logo"
+                    "Side-Bar"
+                    "Map";
+            }
+            .Logo {
+                justify-content: center;
+                align-items: center;
+                height: 80px;
+            }
+            .Side-Bar {
+                padding: 10px;
+                height: auto;
+            }
+            .map-container {
+                height: calc(100vh - 160px);
+            }
         }
     </style>
 </head>
